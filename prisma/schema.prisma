@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String          @id @default(cuid())
+  name           String?
+  email          String          @unique
+  emailVerified  DateTime?       @map("email_verified")
+  image          String?
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  isAdmin        Boolean         @default(false) @map("is_admin")
+  isBanned       Boolean         @default(false) @map("is_banned")
+  accounts       Account[]
+  authenticators Authenticator[]
+  sessions       Session[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String   @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique(map: "Session_sessionToken_key") @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime? @map("updated_at")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Session_userId_fkey")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+model Authenticator {
+  credentialID         String  @unique(map: "Authenticator_credentialID_key") @map("credential_id")
+  userId               String  @map("user_id")
+  providerAccountId    String  @map("provider_account_id")
+  credentialPublicKey  String  @map("credential_public_key")
+  counter              Int
+  credentialDeviceType String  @map("credential_device_type")
+  credentialBackedUp   Boolean @map("credential_backed_up")
+  transports           String?
+  user                 User    @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Authenticator_userId_fkey")
+
+  @@id([userId, credentialID])
+}
+
+model Board {
+  id          String @id(map: "boards_pk")
+  title       String
+  description String
+  index       Int    @default(1)
+  posts       Post[]
+}
+
+model Post {
+  id          String    @id(map: "posts_pk")
+  title       String
+  description String
+  created_at  DateTime? @db.Timestamptz(6)
+  updated_at  DateTime? @db.Timestamptz(6)
+  created_by  String?
+  updated_by  String?
+  status_id   String?
+  is_edited   Boolean   @default(false)
+  media       Json      @default("[]")
+  board_id    String?
+  Comment     Comment[]
+  board       Board?    @relation(fields: [board_id], references: [id], map: "post_board_id_fk")
+  status      Status?   @relation(fields: [status_id], references: [id], map: "posts_statuses_id_fk")
+}
+
+model Status {
+  id    String @id(map: "statuses_pk")
+  title String
+  color String
+  index Int?
+  post  Post[]
+}
+
+model Tag {
+  id    String @id(map: "tags_pk")
+  title String
+  color String
+}
+
+model Config {
+  key   String @id(map: "config_pk")
+  value String
+}
+
+model Comment {
+  id         Int       @id(map: "comment_pk") @default(autoincrement())
+  body       String    @default("")
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  created_by String?
+  updated_at DateTime? @db.Timestamptz(6)
+  updated_by String?
+  post_id    String
+  media      Json      @default("[]")
+  post       Post      @relation(fields: [post_id], references: [id], onDelete: Cascade, map: "comment_post_id_fk")
+}
