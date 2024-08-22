@@ -6,10 +6,18 @@ import AdminSideNav from "@/components/layout/adminSideNav";
 
 const AdminLayout = async ({ children }: any) => {
 
-    const session = auth();
+    const session = await auth();
 
     if(!session){
         redirect(`/api/auth/signin?redirect=${process.env.APP_URL}/admin`)
+    }
+
+    if(!session?.user?.is_admin){
+        return (
+            <div>
+                <p>Unauthorised</p>
+            </div>
+        )
     }
 
     return (

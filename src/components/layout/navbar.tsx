@@ -7,14 +7,16 @@ import {Session} from "next-auth";
 import {useMemo} from "react";
 import Link from "next/link";
 import {PlusFilledIcon} from "@nextui-org/shared-icons";
-import {IconDoorExit, IconPlus, IconSettings, IconUser} from "@tabler/icons-react";
-import {useParams} from "next/navigation";
+import {IconDoorExit, IconKey, IconPlus, IconSettings, IconUser} from "@tabler/icons-react";
+import {useParams, usePathname} from "next/navigation";
 import {useModals} from "@/components/providers/modals.provider";
+import Image from "next/image";
 
 interface NavbarProps {
     boards: Board[];
     siteName: string;
     user?: Session['user']
+    logo: string;
 }
 
 interface ProfileDropdownItem {
@@ -28,8 +30,7 @@ interface ProfileDropdownItem {
 const Navbar = (props: NavbarProps) => {
 
     const modals = useModals();
-
-    const {board} = useParams();
+    const pathname = usePathname();
 
     const items = useMemo(() => {
 
@@ -62,9 +63,9 @@ const Navbar = (props: NavbarProps) => {
                 {
                     key: 'login',
                     title: 'Login',
-                    href: '/api/auth/signin',
-                    icon: IconDoorExit,
-                    color: 'danger'
+                    href: '/signin',
+                    icon: IconKey,
+                    color: 'primary'
                 }
             ] as ProfileDropdownItem[]
         }
@@ -74,20 +75,34 @@ const Navbar = (props: NavbarProps) => {
     return (
         <div className={'flex flex-row items-center justify-center p-4 border-b border-b-foreground-100'}>
             <div className={'container flex flex-row items-center w-full justify-between space-x-6'}>
-                <p>{props.siteName}</p>
+                <div className={'flex flex-row items-center space-x-2'}>
+                    <Image
+                        width={64}
+                        height={64}
+                        className={'w-16 h-16 object-contain'}
+                        src={props.logo}
+                        alt={''}
+                        onError={e => {
+                            // destroy the image element if it fails to load
+                            e.currentTarget.remove()
+                        }}
+                    />
+                    <p>{props.siteName}</p>
+                </div>
+
                 <Tabs
-                    selectedKey={(board as string)}
+                    selectedKey={(pathname as string)}
                 >
                     <Tab
-                        key={'roadmap'}
+                        key={'/roadmap'}
                         title={"Roadmap"}
                         as={Link}
-                        href={'/'}
+                        href={'/roadmap'}
                     />
                     {
                         props.boards.map((board) => (
                             <Tab
-                                key={board.id}
+                                key={`/board/${board.id}`}
                                 title={board.title}
                                 as={Link}
                                 href={`/board/${board.id}`}

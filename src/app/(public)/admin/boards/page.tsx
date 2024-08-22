@@ -1,11 +1,17 @@
+import {prisma} from "@/lib/prisma";
+import BoardSettingsPageClient from "@/app/(public)/admin/boards/page.client";
 
 
 const BoardsSettingsPage = async () => {
 
-    return (
-        <div>
+    const boards = await prisma.board.findMany({
+        orderBy: {
+            index: 'asc'
+        }
+    });
 
-        </div>
+    return (
+        <BoardSettingsPageClient boards={boards}/>
     )
 
 }

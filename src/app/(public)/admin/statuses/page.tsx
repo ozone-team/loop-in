@@ -1,11 +1,19 @@
+import {prisma} from "@/lib/prisma";
+import StatusSettingsPageClient from "./page.client";
 
 
 const StatusSettingsPage = async () => {
 
-    return (
-        <div>
+    const statuses = await prisma.status.findMany({
+        orderBy: {
+            index: 'asc'
+        }
+    })
 
-        </div>
+    return (
+        <StatusSettingsPageClient
+            statuses={statuses}
+        />
     )
 
 }

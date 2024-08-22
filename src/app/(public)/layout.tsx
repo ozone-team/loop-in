@@ -4,6 +4,7 @@ import Navbar from "@/components/layout/navbar";
 import {Suspense} from "react";
 import {auth} from "@/lib/auth";
 import {ModalsProvider} from "@/components/providers/modals.provider";
+import {GetConfig} from "@/lib/config";
 
 const PublicLayout = async ({ children }: any) => {
 
@@ -13,11 +14,7 @@ const PublicLayout = async ({ children }: any) => {
         }
     });
 
-    const {value: site_name} = await prisma.config.findFirstOrThrow({
-        where: {
-            key: 'site_name'
-        }
-    })
+    const {site_name, site_logo} = await GetConfig('site_name', 'site_logo');
 
     const session = await auth();
 
@@ -25,6 +22,7 @@ const PublicLayout = async ({ children }: any) => {
         <ModalsProvider>
             <div>
                 <Navbar
+                    logo={site_logo}
                     boards={boards}
                     siteName={site_name}
                     user={session?.user}

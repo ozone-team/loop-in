@@ -1,11 +1,17 @@
+import {prisma} from "@/lib/prisma";
+import TagSettingsPageClient from "@/app/(public)/admin/tags/page.client";
 
 
 const TagsSettingsPage = async () => {
 
-    return (
-        <div>
+    const tags = await prisma.tag.findMany({
+        orderBy: {
+            title: 'asc'
+        }
+    });
 
-        </div>
+    return (
+        <TagSettingsPageClient tags={tags} />
     )
 
 }
