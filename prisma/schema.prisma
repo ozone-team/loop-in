@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["linux-musl-openssl-3.0.x", "darwin-arm64"]
 }
 
 datasource db {
@@ -8,25 +9,27 @@ datasource db {
 }
 
 model User {
-  id                                  String          @id @default(cuid())
-  name                                String?
-  email                               String          @unique
-  emailVerified                       DateTime?       @map("email_verified")
-  image                               String?
-  createdAt                           DateTime        @default(now()) @map("created_at")
-  updatedAt                           DateTime        @updatedAt @map("updated_at")
-  isAdmin                             Boolean         @default(false) @map("is_admin")
-  isBanned                            Boolean         @default(false) @map("is_banned")
-  accounts                            Account[]
-  authenticators                      Authenticator[]
-  Comment_Comment_updated_by_idToUser Comment[]       @relation("Comment_updated_by_idToUser")
-  Comment_Comment_created_by_idToUser Comment[]       @relation("Comment_created_by_idToUser")
-  Post_Post_created_by_idToUser       Post[]          @relation("Post_created_by_idToUser")
-  Post_Post_updated_by_idToUser       Post[]          @relation("Post_updated_by_idToUser")
-  PostActivity                        PostActivity[]
-  PostVote                            PostVote[]
-  PostWatches                         PostWatches[]
-  sessions                            Session[]
+  id               String          @id @default(cuid())
+  name             String?
+  email            String          @unique
+  emailVerified    DateTime?       @map("email_verified")
+  image            String?
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+  isAdmin          Boolean         @default(false) @map("is_admin")
+  isBanned         Boolean         @default(false) @map("is_banned")
+  accounts         Account[]
+  Announcement     Announcement[]
+  authenticators   Authenticator[]
+  updated_comments Comment[]       @relation("Comment_updated_by_idToUser")
+  created_comments Comment[]       @relation("Comment_created_by_idToUser")
+  comment_votes    CommentVote[]
+  created_posts    Post[]          @relation("Post_created_by_idToUser")
+  updated_posts    Post[]          @relation("Post_updated_by_idToUser")
+  post_activity    PostActivity[]
+  post_votes       PostVote[]
+  watching         PostWatches[]
+  sessions         Session[]
 }
 
 model Account {
@@ -101,6 +104,7 @@ model Post {
   is_edited     Boolean        @default(false)
   board_id      String?
   category_id   String?
+  is_approved   Boolean        @default(false)
   comments      Comment[]
   board         Board?         @relation(fields: [board_id], references: [id], map: "post_board_id_fk")
   category      Category?      @relation(fields: [category_id, board_id], references: [id, board_id], map: "post_category_id_board_id_fk")
@@ -111,7 +115,7 @@ model Post {
   media         PostMedia[]
   tags          PostTag[]
   votes         PostVote[]
-  PostWatches   PostWatches[]
+  watching      PostWatches[]
 }
 
 model Status {
@@ -121,6 +125,7 @@ model Status {
   index           Int?
   is_default      Boolean @default(false)
   show_in_roadmap Boolean @default(false)
+  description     String  @default("")
   posts           Post[]
 }
 
@@ -147,7 +152,8 @@ model Comment {
   post          Post           @relation(fields: [post_id], references: [id], onDelete: Cascade, map: "comment_post_id_fk")
   updated_by    User?          @relation("Comment_updated_by_idToUser", fields: [updated_by_id], references: [id], map: "comment_user_id_fk")
   created_by    User?          @relation("Comment_created_by_idToUser", fields: [created_by_id], references: [id], map: "comment_user_id_fk_2")
-  media  CommentMedia[]
+  media         CommentMedia[]
+  votes         CommentVote[]
 }
 
 model Category {
@@ -155,7 +161,7 @@ model Category {
   title    String
   board_id String
   board    Board  @relation(fields: [board_id], references: [id], onDelete: Cascade, map: "category_board_id_fk")
-  Post     Post[]
+  posts    Post[]
 
   @@id([id, board_id], map: "category_pk")
 }
@@ -220,4 +226,23 @@ model CommentMedia {
   created_at DateTime @default(now()) @db.Timestamptz(6)
   comment_id Int
   comment    Comment  @relation(fields: [comment_id], references: [id], onDelete: Cascade, map: "commentmedia_comment_id_fk")
+}
+
+model Announcement {
+  id            String   @id(map: "announcement_pk")
+  title         String
+  body          String
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  created_by_id String
+  body_plain    String   @default("")
+  created_by    User     @relation(fields: [created_by_id], references: [id], onDelete: Cascade, map: "announcement_user_id_fk")
+}
+
+model CommentVote {
+  comment_id Int
+  user_id    String
+  comment    Comment @relation(fields: [comment_id], references: [id], onDelete: Cascade, map: "commentvote_comment_id_fk")
+  user       User    @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "commentvote_user_id_fk")
+
+  @@id([comment_id, user_id], map: "commentvote_pk")
 }

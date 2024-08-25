@@ -1,9 +1,10 @@
 import {Status} from "@prisma/client";
-import {Divider, ScrollShadow} from "@nextui-org/react";
-import {IconCircleDotted} from "@tabler/icons-react";
+import {Chip, Divider, ScrollShadow} from "@nextui-org/react";
+import {IconCircleDotted, IconTagFilled} from "@tabler/icons-react";
 import Link from "next/link";
 import {formatDistanceToNow} from "date-fns";
 import {StatusWithPosts} from "@/types/status";
+import PostColumnItem from "@/components/posts/postColumnItem";
 
 interface StatusColumnProps {
     status: StatusWithPosts;
@@ -45,18 +46,7 @@ const StatusColumn = (props:StatusColumnProps) => {
                     <div className={'flex flex-col gap-4 p-2'}>
                         {
                             props.status.posts.map((post) => (
-                                <Link href={`/posts/${post.id}`}
-                                      className={'border border-foreground-100 p-2 rounded-lg w-full'} key={post.id}>
-                                    <h3 className={'text-base'}>{post.title}</h3>
-                                    <p className={'line-clamp-2 text-foreground-500 w-full text-sm'}>
-                                        {post.description}
-                                    </p>
-                                    <p className={'text-xs mt-2'}>
-                                        {formatDistanceToNow(post.created_at!, {
-                                            addSuffix: true,
-                                        })}
-                                    </p>
-                                </Link>
+                                <PostColumnItem post={post} key={post.id}/>
                             ))
                         }
                     </div>

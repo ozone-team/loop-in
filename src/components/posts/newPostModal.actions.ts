@@ -3,6 +3,7 @@
 import {prisma} from "@/lib/prisma";
 import {slugify} from "@/lib/slug";
 import {auth} from "@/lib/auth";
+import {GetConfig} from "@/lib/config";
 
 export async function GetBoardsWithCategories(){
     return prisma.board.findMany({
@@ -51,6 +52,17 @@ export async function CreatePost(data: CreatePostDto){
         slug = slug + "-" + (existing.length + 1)
     }
 
+    const {moderation} = await GetConfig('moderation');
+
+    let isApproved = () => {
+        switch (moderation){
+            case 'approve-all': return true;
+            case 'approve-none': return false;
+            case 'approve-users': return Boolean(session?.user);
+            default: return true;
+        }
+    }
+
     return prisma.post.create({
         data: {
             id: slug,
@@ -83,7 +95,13 @@ export async function CreatePost(data: CreatePostDto){
                     created_by_id: session?.user?.id,
                     description: `${session?.user?.name || 'Anonymous User'} created this post`
                 }
-            }
+            },
+            watching: session?.user?.id ? {
+                create: {
+                    user_id: session?.user?.id
+                }
+            } : undefined,
+            is_approved: isApproved()
         }
     });
 }

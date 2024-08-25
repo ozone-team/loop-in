@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import {Inter} from "next/font/google";
 import "./globals.css";
 import Providers from "@/app/providers";
+import {GetConfig} from "@/lib/config";
 
 const inter = Inter({subsets: ["latin"]});
 
@@ -14,9 +15,17 @@ interface RootLayoutProps {
     children: React.ReactNode
 }
 
-export default function RootLayout({children}: Readonly<RootLayoutProps>) {
+export default async function RootLayout({children}: Readonly<RootLayoutProps>) {
+
+    const {site_logo} = await GetConfig('site_logo')
+
+    let filepath = new URL(site_logo).pathname
+
     return (
         <html lang="en">
+        <head>
+            <link rel={'icon'} href={filepath} type={'image/x-icon'} sizes={'any'}/>
+        </head>
         <body className={inter.className}>
         <Providers>
             {children}

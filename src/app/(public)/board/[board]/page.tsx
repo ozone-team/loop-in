@@ -2,6 +2,7 @@ import {prisma} from "@/lib/prisma";
 import {notFound} from "next/navigation";
 import {GetConfig} from "@/lib/config";
 import BoardPageClient from "@/app/(public)/board/[board]/page.client";
+import {GetBoard} from "@/app/(public)/board/[board]/actions";
 
 export const generateMetadata = async (props: { params: { board: string } }) => {
 
@@ -26,49 +27,11 @@ export const generateMetadata = async (props: { params: { board: string } }) => 
 
 const BoardPage = async (props: { params: { board: string } }) => {
 
-    const board = await prisma.board.findFirst({
-        where: {
-            id: props.params.board
-        },
-    });
+    const {board, statuses} = await GetBoard(props.params.board);
 
     if (!board) {
         return notFound()
     }
-
-    const statuses = await prisma.status.findMany({
-        orderBy: {
-            index: 'asc'
-        },
-        include: {
-            posts: {
-                include: {
-                    category: true,
-                    tags: {
-                        select: {
-                            tag: true
-                        }
-                    },
-                    created_by: {
-                        select: {
-                            id: true,
-                            name: true,
-                            image: true
-                        }
-                    }
-                },
-                where: {
-                    board_id: board.id
-                },
-                orderBy: {
-                    created_at: 'desc'
-                }
-            }
-        }
-    });
-
-    console.log(statuses);
-
 
     return (
         <BoardPageClient
@@ -77,5 +40,8 @@ const BoardPage = async (props: { params: { board: string } }) => {
         />
     )
 }
+
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 export default BoardPage

@@ -5,11 +5,11 @@ import {IconX} from "@tabler/icons-react";
 import Image from 'next/image';
 import {FileIcon} from "@/components/files/file-icons";
 import {UploadFile} from "@/app/(actions)/upload-file";
-import {PostMedia} from "@prisma/client";
+import {CommentMedia, PostMedia} from "@prisma/client";
 import Link from "next/link";
 
 interface FileItemProps {
-    file: PostMedia;
+    file: PostMedia | CommentMedia;
 }
 
 const FileItem = (props: FileItemProps) => {

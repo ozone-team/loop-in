@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import {useEffect} from "react";
+import {useEffect, useMemo} from "react";
 import {Button, Spinner} from "@nextui-org/react";
 import {IconX} from "@tabler/icons-react";
 import Image from 'next/image';
@@ -7,7 +7,8 @@ import {FileIcon} from "@/components/files/file-icons";
 import {UploadFile} from "@/app/(actions)/upload-file";
 
 interface UploadFileItemProps {
-    file: File;
+    file: File | null;
+    record?: FileRecord;
     onDelete: () => void;
     onUploaded: (url: string) => void;
 }
@@ -15,29 +16,41 @@ interface UploadFileItemProps {
 const UploadFileItem = (props: UploadFileItemProps) => {
 
     const {mutate:upload, isPending, error, isSuccess} = useMutation({
-        mutationKey: ['upload-file', props.file.name],
+        mutationKey: ['upload-file', props.file?.name],
         mutationFn: async () => {
+            if(!props.file) return;
             const formData = new FormData();
             formData.append('file', props.file);
             return await UploadFile(formData)
         },
         onSuccess: (url) => {
-            props.onUploaded(url)
+            if(url) props.onUploaded(url)
         },
         onError: (error) => {
             console.error(error)
             props.onDelete()
-        }
+        },
     })
 
     useEffect(() => {
-        if(!isPending && !isSuccess){
+        if(!isPending && !isSuccess && props.file){
             upload()
         }
     }, [props.file])
 
+    const isImage = useMemo(() => {
+        return props.record?.mime.startsWith('image') || props.file?.type.startsWith('image')
+    }, [props.file, props.record])
+
+    const fileDetails = useMemo(() => ({
+        name: props.file?.name || props.record?.name || '',
+        size: props.file?.size || props.record?.size,
+        mime: props.file?.type || props.record?.mime,
+        url: props.file ? URL.createObjectURL(props.file) : props.record?.url
+    }), [props.file, props.record])
+
     return (
-        <div className={'relative group'}>
+        <div className={'relative group/ufi'}>
             {
                 (isPending) ?
                     <div className={'w-full z-10 h-full rounded-xl absolute top-0 left-0 grid place-items-center bg-background/80 border border-foreground-200'}>
@@ -47,22 +60,24 @@ const UploadFileItem = (props: UploadFileItemProps) => {
                     <></>
             }
             {
-                props.file.type.startsWith('image') ?
+                isImage ?
                     <Image
-                        src={URL.createObjectURL(props.file)} width={128} height={128}
-                        className={'w-full max-h-28 relative z-0 object-contain rounded-lg border border-foreground-100'}
-                        alt={props.file.name}
-                        aria-label={props.file.name}
-                        title={props.file.name}
+                        src={fileDetails.url || ''} width={128} height={128}
+                        className={'w-full max-h-28 max-w-28 relative z-0 object-contain rounded-lg border border-foreground-100'}
+                        alt={fileDetails.name}
+                        aria-label={fileDetails.name}
+                        title={fileDetails.name}
                     />
                     :
                     <div
-                        className={'bg-foreground-100 p-4 rounded-xl flex flex-col space-y-2 items-center justify-center'}
-                        aria-label={props.file.name}
-                        title={props.file.name}
+                        className={'bg-foreground-100 max-w-28 nax-h-28 p-4 rounded-xl flex flex-col space-y-2 items-center justify-center'}
+                        aria-label={fileDetails.name}
+                        title={fileDetails.name}
                     >
-                        <FileIcon filename={props.file.name} className={'text-foreground-600'} />
-                        <p className={'text-xs text-foreground-600 text-wrap w-full text-center overflow-ellipsis overflow-hidden'}>{props.file.name}</p>
+                        <FileIcon filename={fileDetails.name} className={'text-foreground-600'} />
+                        <p className={'text-xs text-foreground-600 text-wrap w-full text-center overflow-ellipsis overflow-hidden'}>
+                            {fileDetails.name}
+                        </p>
                     </div>
 
             }
@@ -71,7 +86,7 @@ const UploadFileItem = (props: UploadFileItemProps) => {
                 size={'sm'}
                 variant={'light'}
                 color={'danger'}
-                className={'absolute top-2 right-2 group-hover:opacity-100 opacity-0 z-20 transition-all bg-black/40'}
+                className={'absolute top-2 right-2 group-hover/ufi:opacity-100 opacity-0 z-20 transition-all bg-black/40'}
                 aria-label={'Remove Media'}
                 title={'Remove Media'}
                 onClick={() => props.onDelete()}

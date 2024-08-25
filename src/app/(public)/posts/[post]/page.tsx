@@ -7,46 +7,29 @@ import {Prisma} from "@prisma/client";
 import FileItem from "@/components/files/fileItem";
 import {auth} from "@/lib/auth";
 import PostPageClient from "@/app/(public)/posts/[post]/page.client";
+import {GetPost} from "@/app/(public)/posts/[post]/actions";
+import {GetConfig} from "@/lib/config";
+
+export async function generateMetadata(props:PageProps<{post: string}>) {
+
+    const post = await GetPost(props.params.post)
+    const {site_name} = await GetConfig('site_name');
+
+    if(!post){
+        return {
+            title: `Post not found | ${site_name}`
+        }
+    }
+
+    return {
+        title: `${post.title} | ${site_name}`
+    }
+
+}
 
 const PostPage = async (props:PageProps<{post: string}>) => {
 
-    const post = await prisma.post.findFirst({
-        where: {
-            id: props.params.post
-        },
-        include: {
-            status: true,
-            comments: {
-                include: {
-                    created_by: true
-                }
-            },
-            created_by: true,
-            media: true,
-            votes: {
-                select: {
-                    user: {
-                        select: {
-                            id: true,
-                            name: true,
-                            image: true
-                        }
-                    }
-                }
-            },
-            activity: {
-                include: {
-                    created_by: {
-                        select: {
-                            id: true,
-                            name: true,
-                            image: true
-                        }
-                    }
-                }
-            }
-        }
-    });
+    const post = await GetPost(props.params.post)
 
     if(!post){
         notFound()
@@ -58,5 +41,9 @@ const PostPage = async (props:PageProps<{post: string}>) => {
         />
     )
 }
+
+export const revalidate = 0;
+
+export const dynamic = 'force-dynamic';
 
 export default PostPage

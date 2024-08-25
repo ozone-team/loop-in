@@ -4,15 +4,14 @@ import {getServerSession} from "next-auth"
 import {prisma} from "@/lib/prisma";
 import {PrismaAdapter} from "@auth/prisma-adapter";
 import EmailProvider from "next-auth/providers/email";
-import {thumbs} from "@dicebear/collection";
-import {createAvatar} from "@dicebear/core";
-import files from "@/lib/files";
-import path from "node:path";
+import {SendMagicEmail} from "@/app/(actions)/send-magic-email";
+import { GenerateUserAvatar } from "./avatars";
 
 // You'll need to import and pass this
 // to `NextAuth` in `app/api/auth/[...nextauth]/route.ts`
 export const config = {
     adapter: PrismaAdapter(prisma) as any,
+    secret: process.env.AUTH_SECRET || 'my_secret',
     providers: [
         EmailProvider({
             server: {
@@ -24,12 +23,30 @@ export const config = {
                 },
             },
             from: process.env.EMAIL_FROM,
+            sendVerificationRequest: async (params) => {
+
+                let u = await prisma.user.findFirst({
+                    where: {
+                        email: params.identifier
+                    }
+                });
+
+                if(u && u.isBanned){
+                    throw new Error('USER_BANNED');
+                }
+
+                await SendMagicEmail({
+                    email: params.identifier,
+                    link: params.url
+                });
+            }
         })
     ],
+    pages: {
+        signIn: '/signin',
+    },
     callbacks: {
         async session({session, token, user}) {
-
-            console.log("Session Callback")
 
             let dbUser = await prisma.user.findFirst({
                 where: {
@@ -46,12 +63,7 @@ export const config = {
                 }
 
                 if(!dbUser.image){
-
-                    const avatar = createAvatar(thumbs, {
-                        seed: user.email.split('@')[0]
-                    }).toString();
-
-                    updateData['image'] = files.save(avatar, path.join('avatars', `${user.id}.svg`));
+                    updateData['image'] = GenerateUserAvatar(user.id);
                 }
 
                 dbUser = await prisma.user.update({
@@ -65,8 +77,8 @@ export const config = {
 
             session.user = {
                 id: user.id,
-                name: user.name,
-                image: user.image,
+                name: user.name || user.email.split('@')[0],
+                image: user.image || GenerateUserAvatar(user.id),
                 email: user.email,
                 is_admin: dbUser?.isAdmin || false
             };
@@ -82,14 +94,14 @@ export const config = {
 
             // check if the user is banned
             if(u && u.isBanned) {
-                console.debug('User is banned', u);
-                return false
+                return `${process.env.APP_URL}/signin?error=USER_BANNED`;
             }
 
             return true
         }
     }
 } satisfies NextAuthOptions
+
 
 // Use it in server contexts
 export function auth(

@@ -6,13 +6,13 @@ export async function GetConfig(...fields: string[]) {
 
     let obj: Record<string, any> = {};
 
-    let records = await prisma.config.findMany({
+    let records = await prisma.config.findMany(fields.length ? {
         where: {
             key: {
                 in: fields
             }
         }
-    });
+    } : undefined);
 
     records.forEach((record) => {
         obj[record.key] = record.value;

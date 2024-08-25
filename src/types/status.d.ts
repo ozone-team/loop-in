@@ -5,6 +5,19 @@ type StatusWithPosts = Prisma.StatusGetPayload<{
         posts: {
             include: {
                 category: true,
+                board: {
+                    select: {
+                        id: true,
+                        title: true
+                    }
+                },
+                status: {
+                    select: {
+                        id: true,
+                        title: true,
+                        color: true,
+                    }
+                },
                 tags: {
                     select: {
                         tag: true

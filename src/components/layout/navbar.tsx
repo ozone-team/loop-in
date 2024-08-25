@@ -7,10 +7,19 @@ import {Session} from "next-auth";
 import {useMemo} from "react";
 import Link from "next/link";
 import {PlusFilledIcon} from "@nextui-org/shared-icons";
-import {IconDoorExit, IconKey, IconPlus, IconSettings, IconUser} from "@tabler/icons-react";
+import {
+    IconArticle,
+    IconDoorExit,
+    IconKey,
+    IconPlus,
+    IconSettings,
+    IconSpeakerphone,
+    IconUser
+} from "@tabler/icons-react";
 import {useParams, usePathname} from "next/navigation";
 import {useModals} from "@/components/providers/modals.provider";
 import Image from "next/image";
+import {signOut} from "next-auth/react";
 
 interface NavbarProps {
     boards: Board[];
@@ -22,7 +31,8 @@ interface NavbarProps {
 interface ProfileDropdownItem {
     key: string;
     title: string;
-    href: string;
+    href?: string;
+    onClick?: () => void;
     icon: any;
     color?: "default" | "danger" | "primary" | "secondary" | "success" | "warning" | undefined;
 }
@@ -55,7 +65,12 @@ const Navbar = (props: NavbarProps) => {
                     icon: IconDoorExit,
                     color: 'danger',
                     title: 'Logout',
-                    href: '/api/auth/signout'
+                    onClick: () => {
+                        signOut({
+                            redirect: true,
+                            callbackUrl: pathname
+                        })
+                    }
                 }
             ].filter(Boolean) as ProfileDropdownItem[];
         } else {
@@ -75,11 +90,11 @@ const Navbar = (props: NavbarProps) => {
     return (
         <div className={'flex flex-row items-center justify-center p-4 border-b border-b-foreground-100'}>
             <div className={'container flex flex-row items-center w-full justify-between space-x-6'}>
-                <div className={'flex flex-row items-center space-x-2'}>
+                <Link href={`/`} className={'flex flex-row items-center space-x-2'}>
                     <Image
                         width={64}
                         height={64}
-                        className={'w-16 h-16 object-contain'}
+                        className={'w-12 h-12 object-contain'}
                         src={props.logo}
                         alt={''}
                         onError={e => {
@@ -88,9 +103,10 @@ const Navbar = (props: NavbarProps) => {
                         }}
                     />
                     <p>{props.siteName}</p>
-                </div>
+                </Link>
 
                 <Tabs
+                    variant={'underlined'}
                     selectedKey={(pathname as string)}
                 >
                     <Tab
@@ -111,17 +127,55 @@ const Navbar = (props: NavbarProps) => {
                     }
                 </Tabs>
                 <div className={'flex flex-row items-center space-x-2'}>
-                    <Button
-                        variant={'light'}
-                        startContent={(
-                            <IconPlus size={18}/>
-                        )}
-                        size={'sm'}
-                        onClick={() => modals.newPost.onOpen()}
+                    {
+                        props.user?.is_admin ?
+                            <Dropdown
+                                placement={'bottom-end'}
+                            >
+                                <DropdownTrigger>
+                                    <Button
+                                        variant={'light'}
+                                        startContent={(
+                                            <IconPlus size={18}/>
+                                        )}
+                                        size={'sm'}
+                                    >
+                                        New
+                                    </Button>
+                                </DropdownTrigger>
+                                <DropdownMenu>
+                                    <DropdownItem
+                                        startContent={(
+                                            <IconSpeakerphone size={18} />
+                                        )}
+                                    >
+                                        New Announcement
+                                    </DropdownItem>
+                                    <DropdownItem
+                                        startContent={(
+                                            <IconArticle size={18} />
+                                        )}
+                                    >
+                                        New Post
+                                    </DropdownItem>
+                                </DropdownMenu>
+                            </Dropdown>
+                            :
+                            <Button
+                                variant={'light'}
+                                startContent={(
+                                    <IconPlus size={18}/>
+                                )}
+                                size={'sm'}
+                                onClick={() => modals.newPost.onOpen()}
+                            >
+                                New Post
+                            </Button>
+                    }
+
+                    <Dropdown
+                        placement={'bottom-end'}
                     >
-                        New Post
-                    </Button>
-                    <Dropdown>
                         <DropdownTrigger>
                             <User
                                 className={'cursor-pointer'}
@@ -137,7 +191,8 @@ const Navbar = (props: NavbarProps) => {
                         >
                             {(item) => (
                                 <DropdownItem
-                                    as={Link}
+                                    as={item.href ? Link : undefined}
+                                    onClick={() => item.onClick && item.onClick()}
                                     href={item.href}
                                     color={item.color || 'default'}
                                     startContent={(

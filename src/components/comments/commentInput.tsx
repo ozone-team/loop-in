@@ -1,6 +1,6 @@
 "use client"
 
-import {Button, Textarea} from "@nextui-org/react";
+import {Button, Input, Textarea, useDisclosure} from "@nextui-org/react";
 import {useRef, useState} from "react";
 import {useMutation} from "@tanstack/react-query";
 import {GetPost} from "@/app/(public)/posts/[post]/actions";
@@ -19,6 +19,9 @@ interface CommentInputProps {
 const CommentInput = (props: CommentInputProps) => {
 
     const fileRef = useRef<HTMLInputElement>(null);
+    const taRef = useRef<HTMLTextAreaElement>(null);
+
+    const {isOpen, onClose, onOpen} = useDisclosure();
 
     const [comment, setComment] = useState('');
     const [media, setMedia] = useState<FileUploadItem[]>([]);
@@ -27,17 +30,41 @@ const CommentInput = (props: CommentInputProps) => {
         mutationKey: ['submit-comment', props.postId],
         mutationFn: async () => {
             // Submit comment
-            return await SubmitComment(props.postId, comment)
+            return await SubmitComment(props.postId, {
+                body: comment,
+                media: media.map(m => ({
+                    name: m.file!.name,
+                    size: m.file!.size,
+                    mime: m.file!.type,
+                    url: m.url!
+                }))
+            })
         },
         onSuccess: (data) => {
             queryClient.setQueryData(['post', props.postId], data)
             setComment('')
+            setMedia([])
         },
         onError: (error) => {
             console.error(error)
             toast.error('Failed to submit comment: ' + error.message)
         }
     })
+
+    if(!isOpen) {
+        return (
+            <Input
+                className={'mt-2 mb-6'}
+                placeholder={props.hasComments ? 'Write a comment' : 'Be the first to write a comment'}
+                onClick={() => {
+                    onOpen()
+                    setTimeout(() => {
+                        taRef.current?.focus()
+                    }, 500)
+                }}
+            />
+        )
+    }
 
     return (
         <Dropzone
@@ -72,17 +99,18 @@ const CommentInput = (props: CommentInputProps) => {
                             <></>
                     }
                     <Textarea
+                        ref={taRef}
                         placeholder={props.hasComments ? 'Write a comment' : 'Be the first to write a comment'}
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
                     />
                     {
                         media.length ?
-                            <div className={'grid grid-cols-4 items-start gap-4 w-full'}>
+                            <div className={'flex flex-row items-start justify-start flex-wrap gap-4'}>
                                 {
                                     media.map((file, ix) => (
                                         <UploadFileItem
-                                            file={file.file}
+                                            file={file.file || null}
                                             onDelete={() => setMedia(o => o.filter((_, i) => i !== ix))}
                                             key={ix}
                                             onUploaded={(url) => {

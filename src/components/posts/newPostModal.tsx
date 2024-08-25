@@ -78,10 +78,10 @@ const NewPostModal = (props: NewPostModalProps) => {
                 category: category,
                 content: content.trim(),
                 media: media.filter(m=>m.url).map(f => ({
-                    name: f.file.name,
-                    mime: f.file.type,
+                    name: f.file!.name,
+                    mime: f.file!.type,
                     url: f.url!,
-                    size: f.file.size,
+                    size: f.file!.size,
                 })) as any[],
                 tags: tags
             })
@@ -106,7 +106,10 @@ const NewPostModal = (props: NewPostModalProps) => {
             isOpen={props.isOpen}
             onClose={props.onClose}
             title={'New Post'}
-            scrollBehavior={'inside'}
+            scrollBehavior={'outside'}
+            classNames={{
+                closeButton: 'z-20'
+            }}
         >
             <Dropzone
                 onDrop={acceptedFiles => setMedia(o=>[...o, ...(acceptedFiles.map(f => ({file: f})))] )}
@@ -206,7 +209,7 @@ const NewPostModal = (props: NewPostModalProps) => {
                                                 {
                                                     media.map((file, ix) => (
                                                         <UploadFileItem
-                                                            file={file.file}
+                                                            file={file.file || null}
                                                             onDelete={() => setMedia(o => o.filter((_, i) => i !== ix))}
                                                             key={ix}
                                                             onUploaded={(url) => {

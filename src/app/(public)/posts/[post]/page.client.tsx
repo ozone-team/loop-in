@@ -1,13 +1,13 @@
 "use client";
 
-import {IconChevronUp, IconEdit, IconEye, IconTrash} from "@tabler/icons-react";
-import {Button, Textarea, User} from "@nextui-org/react";
+import {IconChevronUp, IconEdit, IconEye, IconEyeOff, IconTagFilled, IconTrash} from "@tabler/icons-react";
+import {Badge, Button, Chip, Textarea, User} from "@nextui-org/react";
 import FileItem from "@/components/files/fileItem";
 import {formatDistanceToNow} from "date-fns";
 import {useSession} from "next-auth/react";
 import {Post, Prisma} from "@prisma/client";
 import {useMutation, useQuery} from "@tanstack/react-query";
-import {DeletePost, GetPost, VoteForPost} from "@/app/(public)/posts/[post]/actions";
+import {DeletePost, GetPost, VoteForPost, WatchPost} from "@/app/(public)/posts/[post]/actions";
 import queryClient from "@/lib/queryClient";
 import {useModals} from "@/components/providers/modals.provider";
 import {useMemo, useState} from "react";
@@ -15,45 +15,12 @@ import DeleteButton from "@/components/buttons/deleteButton";
 import toast from "react-hot-toast";
 import {useRouter} from "next/navigation";
 import LogActivityItem from "@/components/activity/logActivityItem";
-import CommentActivityItem from "@/components/activity/commentActivityItem";
+import CommentItem from "@/components/comments/commentItem";
 import CommentInput from "@/components/comments/commentInput";
 import Link from "next/link";
 import PostStatus from "@/components/posts/postStatus";
+import {PostDetails} from "@/types/posts";
 
-type PostDetails = Prisma.PostGetPayload<{
-    include: {
-        status: true,
-        comments: {
-            include: {
-                created_by: true
-            }
-        },
-        created_by: true,
-        media: true,
-        votes: {
-            select: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        image: true
-                    }
-                }
-            }
-        },
-        activity: {
-            include: {
-                created_by: {
-                    select: {
-                        id: true,
-                        name: true,
-                        image: true
-                    }
-                }
-            }
-        }
-    }
-}>
 
 interface PostPageClientProps {
     post: PostDetails
@@ -64,8 +31,6 @@ const PostPageClient = (props: PostPageClientProps) => {
     const router = useRouter();
     const {data: session} = useSession();
 
-
-
     const modals = useModals();
 
     const {data: post} = useQuery({
@@ -73,7 +38,10 @@ const PostPageClient = (props: PostPageClientProps) => {
         queryFn: async () => {
             return await GetPost(props.post.id)
         },
-        initialData: props.post
+        initialData: props.post,
+        refetchOnWindowFocus: 'always',
+        refetchOnMount: 'always',
+        refetchInterval: 6000
     });
 
     const {mutate: vote} = useMutation({
@@ -131,12 +99,35 @@ const PostPageClient = (props: PostPageClientProps) => {
         }
     });
 
+    const {mutate: watchPost, isPending: isPendingWatchPost} = useMutation({
+        mutationKey: ['watch-post', post.id],
+        mutationFn: async () => {
+            // Watch the post
 
+            if(!session?.user){
+                modals.signInPrompt.onOpen("You need to be signed in to watch a post")
+                return;
+            }
+
+            return await WatchPost(post.id)
+        },
+        onError: (error) => {
+            console.error(error)
+            toast.error('Failed to watch post: ' + error.message)
+        },
+        onSuccess: (data) => {
+            queryClient.setQueryData(['post', post.id], data)
+        }
+    })
 
 
     const canModifyPost = useMemo(() => {
         return (session?.user && session?.user?.id === post.created_by?.id) || session?.user?.is_admin
     }, [session, post?.created_by?.id])
+
+    const isWatching = useMemo(() => {
+        return post?.watching?.some((watch) => watch.user_id === session?.user?.id)
+    }, [post.watching, session?.user?.id]);
 
     const activity = useMemo(() => {
         let log_activity = post.activity.map((activity) => ({
@@ -174,7 +165,17 @@ const PostPageClient = (props: PostPageClientProps) => {
                     </div>
                     <div>
                         <h1 className={'text-xl mb-2'}>{post.title}</h1>
-                        <PostStatus status={post.status || undefined} />
+                        <div className={'flex flex-row items-center space-x-2'}>
+                            <PostStatus post={post} status={post.status || undefined} />
+                            {
+                                post.category ?
+                                    <Chip variant={'flat'}>
+                                        {post.category.title}
+                                    </Chip>
+                                    :
+                                    <></>
+                            }
+                        </div>
                     </div>
                 </div>
                 <User
@@ -191,7 +192,22 @@ const PostPageClient = (props: PostPageClientProps) => {
                     <div className={'flex flex-row items-start justify-start flex-wrap w-full gap-4'}>
                         {
                             post.media.map((media) => (
-                                <FileItem file={media}/>
+                                <FileItem key={media.url} file={media}/>
+                            ))
+                        }
+                    </div>
+                    <div className={'flex flex-row items-start justify-start gap-2 mt-4'}>
+                        {
+                            post.tags.map(({tag}) => (
+                                <Chip
+                                    key={tag.id}
+                                    variant={'flat'}
+                                    startContent={(
+                                        <IconTagFilled size={18} color={tag.color} />
+                                    )}
+                                >
+                                    {tag.title}
+                                </Chip>
                             ))
                         }
                     </div>
@@ -235,18 +251,21 @@ const PostPageClient = (props: PostPageClientProps) => {
                     }
 
                 </div>
-
             </div>
             <div className={'flex flex-col items-end space-y-2'}>
                 <Button
                     size={'sm'}
                     variant={'light'}
                     className={'text-foreground-800 border-foreground-200 border'}
-                    startContent={(
+                    startContent={isWatching ? (
+                        <IconEyeOff size={18} />
+                        ) : (
                         <IconEye size={18} />
                     )}
+                    onClick={() => watchPost()}
+                    isLoading={isPendingWatchPost}
                 >
-                    Watch
+                    {isWatching ? 'Stop Watching' : 'Watch'}
                 </Button>
                 <div className={'border border-foreground-100 rounded-xl p-4 flex flex-col space-y-2 items-start w-full'}>
                     <p className={'text-sm text-foreground-500 uppercase'}>Voters</p>
@@ -254,16 +273,24 @@ const PostPageClient = (props: PostPageClientProps) => {
                         post.votes.length === 0 ?
                             <p className={'text-xs py-2 text-foreground-400'}>No votes</p>
                             :
-                            post.votes.map((vote) => (
-                                <User
-                                    key={vote.user.name}
-                                    name={vote.user.name}
-                                    avatarProps={{
-                                        size: 'sm',
-                                        src: vote.user.image || undefined
-                                    }}
-                                />
-                            ))
+                            <div className={'flex flex-col space-y-2 items-start'}>
+                                {(post.votes.slice(0, 10)).map((vote) => (
+                                    <User
+                                        key={vote.user.name}
+                                        name={vote.user.name}
+                                        avatarProps={{
+                                            size: 'sm',
+                                            src: vote.user.image || undefined
+                                        }}
+                                    />
+                                ))}
+                                {
+                                    post.votes.length > 10 ?
+                                        <p className={'text-xs text-foreground-500'}>and {post.votes.length - 10} more</p>
+                                        :
+                                        <></>
+                                }
+                            </div>
                     }
                 </div>
             </div>
@@ -290,7 +317,7 @@ const PostPageClient = (props: PostPageClientProps) => {
                                 )
                             } else {
                                 return (
-                                    <CommentActivityItem
+                                    <CommentItem
                                         key={activity.data.id}
                                         comment={activity.data}
                                     />

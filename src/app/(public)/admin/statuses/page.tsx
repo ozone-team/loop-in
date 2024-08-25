@@ -1,6 +1,16 @@
 import {prisma} from "@/lib/prisma";
 import StatusSettingsPageClient from "./page.client";
+import {GetConfig} from "@/lib/config";
 
+export async function generateMetadata() {
+
+    const {site_name} = await GetConfig('site_name');
+
+    return {
+        title: `Tags | ${site_name}`
+    }
+
+}
 
 const StatusSettingsPage = async () => {
 

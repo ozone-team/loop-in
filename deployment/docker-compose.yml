@@ -1,0 +1,50 @@
+
+services:
+  database:
+    container_name: feedback-portal-db
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: feedback-portal
+      POSTGRES_USER: postgres_user
+      POSTGRES_PASSWORD: mysupersecretpassword
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c" "pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}" ]
+      interval: 5s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
+    volumes:
+      - data:/var/lib/postgresql/data
+
+  app:
+    container_name: feedback-portal-app
+    image: ozoneteam/feedback-portal:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - public:/app/public
+    depends_on:
+      - database
+    environment:
+        # Database Connection
+        DATABASE_URL: postgres://postgres_user:mysupersecretpassword@database:5432/feedback-portal
+        # General Configuration for the App
+        APP_URL: http://localhost:3000
+        # Email Server connection for Authentication and Notifications
+        # REQUIRED for login & email notifications
+        EMAIL_SERVER_USER: username
+        EMAIL_SERVER_PASSWORD: password
+        EMAIL_SERVER_HOST: smtp.server.com
+        EMAIL_SERVER_PORT: 587
+        EMAIL_SERVER_SECURE: false
+        EMAIL_FROM: "My Website <noreply@email.com>"
+        # Authentication - Change for Production
+        AUTH_SECRET: 66625cd0c24563168e3aa543296ff8bb50db60ebdf6d996278cf2d29d2253211
+        # This needs to be the same as APP_URL
+        NEXTAUTH_URL: http://localhost:3000
+        # Seed data
+        ADMIN_EMAIL: 'joe.blogs@mycompany.com'
+
+volumes:
+  data:
+  public:

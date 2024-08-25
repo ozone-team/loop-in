@@ -1,5 +1,16 @@
 import {GetConfig} from "@/lib/config";
 import SiteSettingsPageClient from "@/app/(public)/admin/page.client";
+import {auth} from "@/lib/auth";
+
+export async function generateMetadata() {
+
+    const {site_name} = await GetConfig('site_name');
+
+    return {
+        title: `Site Settings | ${site_name}`
+    }
+
+}
 
 const SiteSettingsPage = async () => {
 

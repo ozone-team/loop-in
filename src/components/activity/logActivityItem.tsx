@@ -23,7 +23,7 @@ interface LogActivityItemProps {
 const ActivityIcons:Record<string, TablerIcon> = {
     create: IconPlus,
     update: IconPencil,
-    status_change: IconStatusChange,
+    status: IconStatusChange,
 }
 
 
@@ -42,12 +42,12 @@ const ActivityIcon = (props: ActivityIconProps) => {
 
 const LogActivityItem = ({activity}: LogActivityItemProps) => {
 
-    const statusTextDef = 'group-data-[type="create"]:text-success-500 group-data-[type="update"]:text-primary-500 group-data-[type="status_change"]:text-warning-500'
+    const statusTextDef = 'group-data-[type="create"]:text-success-500 group-data-[type="update"]:text-primary-500 group-data-[type="status"]:text-amber-500'
 
     return (
         <div
-            className={'flex flex-row group items-center space-x-2 -translate-x-3.5'}
-            data-type={activity.type}
+            className={'flex flex-row group items-start space-x-2 -translate-x-3.5'}
+            data-type={activity.type.toLowerCase()}
         >
             <div className={'rounded-full bg-background border border-foreground-100 p-1'}>
                 <ActivityIcon
@@ -56,12 +56,14 @@ const LogActivityItem = ({activity}: LogActivityItemProps) => {
                     className={cn(statusTextDef)}
                 />
             </div>
-            <div>
-                <p className={cn('text-xs uppercase font-medium', statusTextDef)}>{activity.type}</p>
-                <p className={'text-sm'}>
+            <div className={'py-1.5'}>
+                <p className={cn('text-xs uppercase font-medium', statusTextDef)}>
+                    {activity.type}
+                </p>
+                <p className={'text-sm py-1'}>
                     {activity.description}
                 </p>
-                <p className={'text-xs text-foreground-500'}>
+                <p className={'text-xs text-foreground-500 mt-2'}>
                     {formatDistanceToNow(activity.created_at!, {
                         addSuffix: true,
                     })}
