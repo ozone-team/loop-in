@@ -1,10 +1,10 @@
 
 services:
   database:
-    container_name: feedback-portal-db
+    container_name: loop-in-db
     image: postgres:latest
     environment:
-      POSTGRES_DB: feedback-portal
+      POSTGRES_DB: loop-in
       POSTGRES_USER: postgres_user
       POSTGRES_PASSWORD: mysupersecretpassword
     healthcheck:
@@ -17,8 +17,8 @@ services:
       - data:/var/lib/postgresql/data
 
   app:
-    container_name: feedback-portal-app
-    image: ozoneteam/feedback-portal:latest
+    container_name: loop-in-app
+    image: ozoneteam/loop-in:latest
     ports:
       - "3000:3000"
     volumes:
@@ -27,7 +27,7 @@ services:
       - database
     environment:
         # Database Connection
-        DATABASE_URL: postgres://postgres_user:mysupersecretpassword@database:5432/feedback-portal
+        DATABASE_URL: postgres://postgres_user:mysupersecretpassword@database:5432/loop-in
         # General Configuration for the App
         APP_URL: http://localhost:3000
         # Email Server connection for Authentication and Notifications

@@ -1,36 +1,168 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Getting Started
+![Logo](https://cdn.ozoneteam.net/loop-in-logo.svg)
 
-First, run the development server:
+
+
+
+# Loop In
+
+![Docker Pulls](https://img.shields.io/docker/pulls/ozoneteam/loop-in)
+
+An easy to use system to centralise product feedback and update stakeholders on project progress.
+
+## Docs
+
+Official documentation coming soon :)
+
+## Features
+
+- Light and dark mode
+- Anonymous feedback
+- Use authentication with email magic links (SMTP required)
+- Cross-platform
+- Customisable boards, statuses and tags
+- Announcement system
+- Email notifications
+
+## Tech Stack
+
+**Client:**
+- [NextJS](https://nextjs.org) - Core Framework
+- [TailwindCSS](https://tailwindcss.com) - Styling
+- [NextUI](https://nextui.org) - UI Components
+- [Tabler Icons](https://tablericons.com) - Icon Library
+- [Tanstack Query](https://tanstack.com/query) - Client request management
+
+**Server:**
+- [Postgres](https://www.postgresql.org/) - Database
+- [NextAuth](https://next-auth.js.org/) - Authentication
+- [Prisma ORM](https://prisma.io) - Database ORM Client
+
+
+
+## Deployment
+
+
+### Docker (Official)
+
+1. Make sure you have [Docker](https://docker.com) installed
+2. To easily deploy using Docker Compose, copy the docker-compose.yml file is found in the 'deployment' folder.
+
+```yml
+# docker-compose.yml
+
+services:
+  database:
+    container_name: feedback-portal-db
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: feedback-portal
+      POSTGRES_USER: postgres_user
+      POSTGRES_PASSWORD: mysupersecretpassword
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c", "pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}" ]
+      interval: 5s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
+    volumes:
+      - data:/var/lib/postgresql/data
+
+  app:
+    container_name: feedback-portal-app
+    image: ozoneteam/feedback-portal:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - public:/app/public
+    depends_on:
+      - database
+    environment:
+        # Database Connection
+        DATABASE_URL: postgres://postgres_user:mysupersecretpassword@database:5432/feedback-portal
+        # General Configuration for the App
+        APP_URL: http://localhost:3000
+        # Email Server connection for Authentication and Notifications
+        # REQUIRED for login & email notifications
+        EMAIL_SERVER_USER: username
+        EMAIL_SERVER_PASSWORD: password
+        EMAIL_SERVER_HOST: smtp.server.com
+        EMAIL_SERVER_PORT: 587
+        EMAIL_SERVER_SECURE: false
+        EMAIL_FROM: "My Website <noreply@email.com>"
+        # Authentication - Change for Production
+        AUTH_SECRET: 66625cd0c24563168e3aa543296ff8bb50db60ebdf6d996278cf2d29d2253211
+        # This needs to be the same as APP_URL
+        NEXTAUTH_URL: http://localhost:3000
+        # Seed data
+        ADMIN_EMAIL: 'joe.blogs@mycompany.com'
+
+volumes:
+  data:
+  public:
+
+```
+3. Start the containers using docker compose
+```sh
+docker compose up -d
+```
+This will seed the database and start the application. The `ADMIN_EMAIL` environment variable dictates the default admin user that is created on seeding.
+
+4. Access the application at `https://localhost:3000`
+
+## Run Locally
+
+### Requirements
+
+- [NodeJS](https://nodejs.org)
+- [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable)
+- [Docker](https://docker.com) - Optional if database is hosted differently
+
+
+Clone the project
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+  git clone https://github.com/ozone-team/loop-in.git
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Go to the project directory
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+  cd loop-in
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+Install dependencies
 
-## Learn More
+```bash
+  yarn install
+```
 
-To learn more about Next.js, take a look at the following resources:
+Copy the example environment file (adjsut the values as needed)
+```bash
+  cp .env.example .env
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Start the database (if not running already, adjust the environment variables to correlate to the .env file as needed)
+```
+  docker compose up -d database
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Start the server
 
-## Deploy on Vercel
+```bash
+  yarn dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## Authors
+
+- [@harrycarp](https://www.github.com/harrycarp)
+
+## 🚧  Roadmap
+
+- Better mobile UI support
+
+- Slack and Discord integration to notify team members
+
+- SSO for team members
+
