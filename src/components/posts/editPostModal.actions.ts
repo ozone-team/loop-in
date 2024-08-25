@@ -28,7 +28,7 @@ export async function UpdatePost(id: string, data:UpdatePostDto) {
     if(id !== slug) {
         const existing = await prisma.post.findMany({
             where: {
-                slug
+                id: slug
             }
         });
 
