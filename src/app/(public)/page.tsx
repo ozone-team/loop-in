@@ -1,5 +1,5 @@
 import {GetLatestAnnouncements, GetLatestPosts} from "@/app/(public)/actions";
-import HomePageClient from "@/app/page.client";
+import HomePageClient from "@/app/(public)/page.client";
 
 const HomePage = async () => {
 

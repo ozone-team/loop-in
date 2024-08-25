@@ -33,8 +33,8 @@ const HomePageClient = (props: HomePageClientProps) => {
     })
 
     return (
-        <div className={'container py-8'}>
-            <section className={'grid gap-12 grid-cols-[2fr_1fr]'}>
+        <div className={'container py-8 mobile:px-4'}>
+            <section className={'grid gap-12 grid-cols-[2fr_1fr] mobile:grid-cols-1'}>
                 <div>
                     <div className={'flex flex-row items-baseline justify-between mb-2'}>
                         <p className={'text-sm uppercase text-foreground-500'}>Latest Announcements</p>

@@ -7,7 +7,7 @@ import {useQuery} from "@tanstack/react-query";
 import {GetBoard} from "@/app/(public)/board/[board]/actions";
 import {useState} from "react";
 import {useLocalStorage} from "usehooks-ts";
-import {Divider, Tab, Tabs} from "@nextui-org/react";
+import {Divider, ScrollShadow, Tab, Tabs} from "@nextui-org/react";
 import {IconLayoutKanban, IconLayoutList} from "@tabler/icons-react";
 import StatusSection from "@/components/boards/statusSection";
 
@@ -46,32 +46,41 @@ export const BoardPageClient = (props: BoardPageClientProps) => {
                     <Tab title={(<IconLayoutList size={18} />)} key={'list'} />
                 </Tabs>
             </div>
-            {
-                view === 'kanban' ? (
-                    <div className={'grid grid-cols-3 gap-4 items-start justify-center'}>
-                        {
-                            data.statuses.map((status) => (
-                                <StatusColumn
-                                    key={status.id}
-                                    status={status}
-                                />
-                            ))
-                        }
-                    </div>
-                ) : (
-                    <div className={'flex flex-col space-y-2'}>
-                        {
-                            data.statuses.map((status) => (
-                                <StatusSection
-                                    key={status.id}
-                                    status={status}
-                                />
-                            ))
-                        }
-                    </div>
-                )
-            }
-
+            <section>
+                {
+                    view === 'kanban' ? (
+                        <ScrollShadow className={'w-full'} orientation={'horizontal'}>
+                            <div
+                                style={{
+                                    //@ts-ignore
+                                    "--mobile-cols": props.statuses.length
+                                }}
+                                className={'grid grid-cols-3 gap-4 items-start justify-center mobile:grid-cols-[repeat(var(--mobile-cols),minmax(60vw,1fr))] mobile:justify-start'}
+                            >
+                                {
+                                    data.statuses.map((status) => (
+                                        <StatusColumn
+                                            key={status.id}
+                                            status={status}
+                                        />
+                                    ))
+                                }
+                            </div>
+                        </ScrollShadow>
+                    ) : (
+                        <div className={'flex flex-col space-y-2'}>
+                            {
+                                data.statuses.map((status) => (
+                                    <StatusSection
+                                        key={status.id}
+                                        status={status}
+                                    />
+                                ))
+                            }
+                        </div>
+                    )
+                }
+            </section>
         </main>
 
     )

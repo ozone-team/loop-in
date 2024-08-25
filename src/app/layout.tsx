@@ -26,7 +26,7 @@ export default async function RootLayout({children}: Readonly<RootLayoutProps>) 
         <head>
             <link rel={'icon'} href={filepath} type={'image/x-icon'} sizes={'any'}/>
         </head>
-        <body className={inter.className}>
+        <body className={inter.className + ' mobile:overflow-x-hidden'}>
         <Providers>
             {children}
         </Providers>

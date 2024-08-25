@@ -20,7 +20,7 @@ const PublicLayout = async ({ children }: any) => {
 
     return (
         <ModalsProvider>
-            <div>
+            <div className={'mobile:overflow-x-hidden w-full'}>
                 <Navbar
                     logo={site_logo}
                     boards={boards}

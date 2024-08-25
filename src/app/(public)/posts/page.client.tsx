@@ -2,7 +2,7 @@
 
 import {PostListItem} from "@/types/posts";
 import {Board, Status} from "@prisma/client";
-import {Button} from "@nextui-org/react";
+import {Button, useDisclosure} from "@nextui-org/react";
 import {useEffect, useState} from "react";
 import { IconCheck } from "@tabler/icons-react";
 import {useInfiniteQuery} from "@tanstack/react-query";
@@ -17,6 +17,7 @@ interface PostsPageClientProps {
 }
 
 const PostsPageClient = (props: PostsPageClientProps) => {
+
 
     const [board, setBoard] = useState<string | null>(null);
     const [statuses, setStatuses] = useState<string[]>(props.statuses.map(s => s.id));
@@ -67,7 +68,7 @@ const PostsPageClient = (props: PostsPageClientProps) => {
     }, [data])
 
     return (
-        <div className={'grid grid-cols-[256px_1fr] gap-4 relative container py-4'}>
+        <div className={'grid grid-cols-[256px_1fr] gap-4 relative container py-4 mobile:grid-cols-1'}>
             <div className={'flex flex-col w-full items-stretch space-y-4 sticky top-0'}>
                 <div className={'w-full border-foreground-100 border rounded-xl p-3'}>
                     <p className={'uppercase text-xs mb-2'}>Boards</p>

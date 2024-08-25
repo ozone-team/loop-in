@@ -24,7 +24,7 @@ const NewAnnouncementPageClient = () => {
     })
 
     return (
-        <div className={'container max-w-2xl py-8 flex flex-col items-stretch'}>
+        <div className={'container max-w-2xl py-8 flex flex-col items-stretch mobile:px-4'}>
             <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}

@@ -1,7 +1,7 @@
 "use client";
 
 import {IconChevronUp, IconEdit, IconEye, IconEyeOff, IconTagFilled, IconTrash} from "@tabler/icons-react";
-import {Badge, Button, Chip, Textarea, User} from "@nextui-org/react";
+import {Badge, Button, Chip, Textarea, useDisclosure, User} from "@nextui-org/react";
 import FileItem from "@/components/files/fileItem";
 import {formatDistanceToNow} from "date-fns";
 import {useSession} from "next-auth/react";
@@ -20,6 +20,7 @@ import CommentInput from "@/components/comments/commentInput";
 import Link from "next/link";
 import PostStatus from "@/components/posts/postStatus";
 import {PostDetails} from "@/types/posts";
+import EditPostModal from "@/components/posts/editPostModal";
 
 
 interface PostPageClientProps {
@@ -30,7 +31,7 @@ const PostPageClient = (props: PostPageClientProps) => {
 
     const router = useRouter();
     const {data: session} = useSession();
-
+    const {isOpen:editOpen, onOpen:openEdit, onClose:closeEdit} = useDisclosure();
     const modals = useModals();
 
     const {data: post} = useQuery({
@@ -150,7 +151,7 @@ const PostPageClient = (props: PostPageClientProps) => {
     }, [post])
 
     return (
-        <div className={'container py-8 grid grid-cols-[1fr_384px] gap-12'}>
+        <div className={'container py-8 grid grid-cols-[1fr_384px] gap-12 mobile:grid-cols-1 mobile:gap-4 mobile:px-6'}>
             <div>
                 <div className={'flex flex-row items-center space-x-2 mb-4'}>
                     <div
@@ -166,7 +167,7 @@ const PostPageClient = (props: PostPageClientProps) => {
                     <div>
                         <h1 className={'text-xl mb-2'}>{post.title}</h1>
                         <div className={'flex flex-row items-center space-x-2'}>
-                            <PostStatus post={post} status={post.status || undefined} />
+                            <PostStatus post={post} status={post.status || undefined}/>
                             {
                                 post.category ?
                                     <Chip variant={'flat'}>
@@ -203,7 +204,7 @@ const PostPageClient = (props: PostPageClientProps) => {
                                     key={tag.id}
                                     variant={'flat'}
                                     startContent={(
-                                        <IconTagFilled size={18} color={tag.color} />
+                                        <IconTagFilled size={18} color={tag.color}/>
                                     )}
                                 >
                                     {tag.title}
@@ -219,37 +220,73 @@ const PostPageClient = (props: PostPageClientProps) => {
                     <div className={'flex-grow'}/>
                     {
                         canModifyPost ?
-                        <>
-                            <Button
-                                size={'sm'}
-                                variant={'light'}
-                                className={'text-foreground-500'}
-                                startContent={(
-                                    <IconEdit size={16}/>
-                                )}
-                            >
-                                Edit Post
-                            </Button>
-                            <DeleteButton
-                                onDelete={()=>deletePost()}
-                                isDeleting={isDeletingPost}
-                                confirmLabel={'Are you sure you want to delete this post?'}
-                                buttonProps={{
-                                    size: 'sm',
-                                    variant: 'light',
-                                    color: 'danger',
-                                    className: 'text-foreground-500 hover:text-danger-600',
-                                    startContent: <IconTrash size={16}/>
-                                }}
-                                popoverProps={{
-                                    placement: 'bottom-end'
-                                }}
-                            />
-                        </>
-                        :
-                        <></>
+                            <>
+                                <Button
+                                    size={'sm'}
+                                    variant={'light'}
+                                    className={'text-foreground-500'}
+                                    startContent={(
+                                        <IconEdit size={16}/>
+                                    )}
+                                    onClick={() => openEdit()}
+                                >
+                                    Edit Post
+                                </Button>
+                                <DeleteButton
+                                    onDelete={() => deletePost()}
+                                    isDeleting={isDeletingPost}
+                                    confirmLabel={'Are you sure you want to delete this post?'}
+                                    buttonProps={{
+                                        size: 'sm',
+                                        variant: 'light',
+                                        color: 'danger',
+                                        className: 'text-foreground-500 hover:text-danger-600',
+                                        startContent: <IconTrash size={16}/>
+                                    }}
+                                    popoverProps={{
+                                        placement: 'bottom-end'
+                                    }}
+                                />
+                            </>
+                            :
+                            <></>
                     }
 
+                </div>
+                <div className={'mt-6'}>
+                    <h2 className={'mb-2'}>Activity</h2>
+                    {
+                        session?.user ?
+                            <CommentInput postId={post.id} hasComments={post.comments.length > 0}/>
+                            :
+                            <div className={'bg-foreground-100 rounded-xl p-4 mb-4'}>
+                                <p className={'text-sm text-foreground-500'}><Link
+                                    className={'text-primary-500 hover:underline font-medium'} href={'/signin'}>Sign
+                                    in</Link> to leave a comment</p>
+                            </div>
+                    }
+
+                    <div className={'flex flex-col items-start border-l border-l-foreground-200 space-y-5'}>
+                        {
+                            activity.map((activity) => {
+                                if (activity.entity === 'log') {
+                                    return (
+                                        <LogActivityItem
+                                            key={activity.data.id}
+                                            activity={activity.data}
+                                        />
+                                    )
+                                } else {
+                                    return (
+                                        <CommentItem
+                                            key={activity.data.id}
+                                            comment={activity.data}
+                                        />
+                                    )
+                                }
+                            })
+                        }
+                    </div>
                 </div>
             </div>
             <div className={'flex flex-col items-end space-y-2'}>
@@ -258,16 +295,17 @@ const PostPageClient = (props: PostPageClientProps) => {
                     variant={'light'}
                     className={'text-foreground-800 border-foreground-200 border'}
                     startContent={isWatching ? (
-                        <IconEyeOff size={18} />
-                        ) : (
-                        <IconEye size={18} />
+                        <IconEyeOff size={18}/>
+                    ) : (
+                        <IconEye size={18}/>
                     )}
                     onClick={() => watchPost()}
                     isLoading={isPendingWatchPost}
                 >
                     {isWatching ? 'Stop Watching' : 'Watch'}
                 </Button>
-                <div className={'border border-foreground-100 rounded-xl p-4 flex flex-col space-y-2 items-start w-full'}>
+                <div
+                    className={'border border-foreground-100 rounded-xl p-4 flex flex-col space-y-2 items-start w-full'}>
                     <p className={'text-sm text-foreground-500 uppercase'}>Voters</p>
                     {
                         post.votes.length === 0 ?
@@ -294,39 +332,7 @@ const PostPageClient = (props: PostPageClientProps) => {
                     }
                 </div>
             </div>
-            <div>
-                <h2 className={'mb-2'}>Activity</h2>
-                {
-                    session?.user ?
-                        <CommentInput postId={post.id} hasComments={post.comments.length > 0} />
-                        :
-                        <div className={'bg-foreground-100 rounded-xl p-4 mb-4'}>
-                            <p className={'text-sm text-foreground-500'}><Link className={'text-primary-500 hover:underline font-medium'} href={'/signin'}>Sign in</Link> to leave a comment</p>
-                        </div>
-                }
-
-                <div className={'flex flex-col items-start border-l border-l-foreground-200 space-y-5'}>
-                    {
-                        activity.map((activity) => {
-                            if(activity.entity === 'log') {
-                                return (
-                                    <LogActivityItem
-                                        key={activity.data.id}
-                                        activity={activity.data}
-                                    />
-                                )
-                            } else {
-                                return (
-                                    <CommentItem
-                                        key={activity.data.id}
-                                        comment={activity.data}
-                                    />
-                                )
-                            }
-                        })
-                    }
-                </div>
-            </div>
+            <EditPostModal isOpen={editOpen} onClose={closeEdit} post={post} />
         </div>
     )
 

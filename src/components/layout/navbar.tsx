@@ -2,7 +2,17 @@
 
 import {Board, Prisma} from "@prisma/client";
 import {prisma} from "@/lib/prisma";
-import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Tab, Tabs, User} from "@nextui-org/react";
+import {
+    Button,
+    Dropdown,
+    DropdownItem,
+    DropdownMenu,
+    DropdownTrigger,
+    Tab,
+    Tabs,
+    useDisclosure,
+    User
+} from "@nextui-org/react";
 import {Session} from "next-auth";
 import {useMemo} from "react";
 import Link from "next/link";
@@ -10,7 +20,7 @@ import {PlusFilledIcon} from "@nextui-org/shared-icons";
 import {
     IconArticle,
     IconDoorExit,
-    IconKey,
+    IconKey, IconMenu,
     IconPlus,
     IconSettings,
     IconSpeakerphone,
@@ -20,6 +30,7 @@ import {useParams, usePathname} from "next/navigation";
 import {useModals} from "@/components/providers/modals.provider";
 import Image from "next/image";
 import {signOut} from "next-auth/react";
+import MobileNavMenu from "@/components/layout/mobileNavMenu";
 
 interface NavbarProps {
     boards: Board[];
@@ -38,6 +49,8 @@ interface ProfileDropdownItem {
 }
 
 const Navbar = (props: NavbarProps) => {
+
+    const {isOpen, onClose, onOpen} = useDisclosure();
 
     const modals = useModals();
     const pathname = usePathname();
@@ -102,12 +115,16 @@ const Navbar = (props: NavbarProps) => {
                             e.currentTarget.remove()
                         }}
                     />
-                    <p>{props.siteName}</p>
+                    <p
+                        className={'mobile:hidden'}
+                    >
+                        {props.siteName}
+                    </p>
                 </Link>
-
                 <Tabs
                     variant={'underlined'}
                     selectedKey={(pathname as string)}
+                    className={'mobile:hidden'}
                 >
                     <Tab
                         key={'/roadmap'}
@@ -126,7 +143,7 @@ const Navbar = (props: NavbarProps) => {
                         ))
                     }
                 </Tabs>
-                <div className={'flex flex-row items-center space-x-2'}>
+                <div className={'flex flex-row items-center space-x-2 mobile:hidden'}>
                     {
                         props.user?.is_admin ?
                             <Dropdown
@@ -205,8 +222,23 @@ const Navbar = (props: NavbarProps) => {
                         </DropdownMenu>
                     </Dropdown>
                 </div>
-
+                <Button
+                    variant={'light'}
+                    isIconOnly={true}
+                    onClick={onOpen}
+                    className={'mobile:flex hidden'}
+                >
+                    <IconMenu size={18} />
+                </Button>
             </div>
+            <MobileNavMenu
+                isOpen={isOpen}
+                onClose={onClose}
+                site={props.siteName}
+                logo={props.logo}
+                boards={props.boards}
+                user={props.user}
+            />
         </div>
     )
 

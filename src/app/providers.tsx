@@ -18,7 +18,7 @@ const Providers = (props: ProvidersProps) => {
         <SessionProvider>
             <QueryClientProvider client={reactQueryClient}>
                 <NextUIProvider>
-                    <NextThemesProvider attribute="class" defaultTheme="dark">
+                    <NextThemesProvider attribute={"class"} defaultTheme={"system"} enableSystem={true}>
                         {props.children}
                         <Toaster/>
                     </NextThemesProvider>

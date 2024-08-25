@@ -46,7 +46,7 @@ const ProfilePageClient = (props:ProfilePageClientProps) => {
 
     return (
         <div
-            className={'flex flex-col items-stretch max-w-lg container space-y-2 py-12'}
+            className={'flex flex-col items-stretch max-w-lg container space-y-2 py-12 mobile:p-4'}
         >
             <p className={'font-medium'}>Your Profile</p>
             <p className={'text-xs !mb-4'}>Update your profile information</p>
