@@ -1,7 +1,12 @@
-import {prisma} from "@/lib/prisma";
-import {GetConfig, UpdateConfig} from "@/lib/config";
-import {slugify} from "@/lib/slug";
-import {GenerateUserAvatar} from "@/lib/avatars";
+/**
+ * This is the Prisma script to seed the database
+ * This is SEPARATE from the instrumentation.ts file.
+ * Instrumentation runs on container start, this runs on docker image build
+ */
+
+import {PrismaClient} from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 export async function Seed(){
 
@@ -168,3 +173,55 @@ function GenerateUserId(length: number = 16){
     }
     return result;
 }
+
+/**
+ * These need to be in the same file, as we can't import in an NPX context
+ * @param fields
+ * @constructor
+ */
+async function GetConfig(...fields: string[]) {
+
+    // get the values of the fields from the database Config key-value pair table
+
+    let obj: Record<string, any> = {};
+
+    let records = await prisma.config.findMany(fields.length ? {
+        where: {
+            key: {
+                in: fields
+            }
+        }
+    } : undefined);
+
+    records.forEach((record) => {
+        obj[record.key] = record.value;
+    });
+
+    return obj;
+
+}
+
+async function UpdateConfig(data: Record<string, string>) {
+
+    const updatePromises = Object.keys(data).map(key => {
+        return prisma.config.upsert({
+            where: { key },
+            update: { value: data[key] },
+            create: { key, value: data[key] },
+        });
+    });
+
+    await Promise.all(updatePromises);
+}
+
+function slugify(str: string) {
+    return str
+        .toLowerCase()
+        .replace(/ /g, '-')
+        .replace(/[^a-z0-9-]/g, '');
+}
+
+Seed().catch((e) => {
+    console.error(e);
+    process.exit(1);
+});

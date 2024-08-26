@@ -9,6 +9,9 @@
     "lint": "next lint",
     "email:dev": "email dev -p 3001"
   },
+  "prisma": {
+    "seed": "./node_modules/.bin/ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+  },
   "dependencies": {
     "@auth/prisma-adapter": "^2.4.2",
     "@dicebear/collection": "^9.2.1",
@@ -37,7 +40,8 @@
     "react-hot-toast": "^2.4.1",
     "swapy": "^0.1.1",
     "usehooks-ts": "^3.1.0",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@types/node": "^20",

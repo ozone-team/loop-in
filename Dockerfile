@@ -3,6 +3,7 @@ FROM --platform=linux/amd64 node:18-alpine  AS base
 ARG DATABASE_URL
 
 ENV DATABASE_URL=$DATABASE_URL
+ENV APP_URL=http://localhost:3000
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -25,6 +26,9 @@ COPY . .
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
 ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN npx prisma migrate deploy
+RUN npx prisma db seed
 
 RUN yarn run build
 
@@ -60,8 +64,10 @@ ENV HOSTNAME="0.0.0.0"
 
 ENV NEXT_SHARP_PATH=/app/node_modules/sharp
 
+RUN npm i -g ts-node
+
 COPY prisma ./prisma
 
 # server.js is created by next build from the standalone output
 # https://nextjs.org/docs/pages/api-reference/next-config-js/output
-CMD ["npx prisma migrate deploy && node server.js"]
+CMD ["/bin/sh", "-c", "npx prisma migrate deploy && node server.js"]

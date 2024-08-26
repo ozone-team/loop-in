@@ -19,7 +19,7 @@ model User {
   isAdmin          Boolean         @default(false) @map("is_admin")
   isBanned         Boolean         @default(false) @map("is_banned")
   accounts         Account[]
-  Announcement     Announcement[]
+  announcements     Announcement[]
   authenticators   Authenticator[]
   updated_comments Comment[]       @relation("Comment_updated_by_idToUser")
   created_comments Comment[]       @relation("Comment_created_by_idToUser")
