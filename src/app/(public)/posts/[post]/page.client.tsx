@@ -40,9 +40,6 @@ const PostPageClient = (props: PostPageClientProps) => {
             return await GetPost(props.post.id)
         },
         initialData: props.post,
-        refetchOnWindowFocus: 'always',
-        refetchOnMount: 'always',
-        refetchInterval: 6000
     });
 
     const {mutate: vote} = useMutation({

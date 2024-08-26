@@ -1,4 +1,5 @@
 import { PutObjectCommand, S3Client} from "@aws-sdk/client-s3";
+import path from "node:path";
 
 const S3 = new S3Client({
     region: "auto",
@@ -14,6 +15,14 @@ const S3 = new S3Client({
 class Files {
 
     async saveBuffer(buffer: ArrayBuffer, file_path: string, contentType: string) {
+
+        let filename = path.basename(file_path);
+        let pathname = path.dirname(file_path);
+
+        filename = `${Date.now()}-${filename}`;
+
+        file_path = path.join(pathname, filename);
+
         await this.ToS3({
             data: buffer,
             file_path: file_path,
@@ -25,6 +34,15 @@ class Files {
 
     async save(file: File, file_path: string) {
         const data = await file.arrayBuffer();
+
+        // first we prefix the file with the current timestamp to prevent collisions
+        let filename = path.basename(file_path);
+        let pathname = path.dirname(file_path);
+
+        filename = `${Date.now()}-${filename}`;
+
+        file_path = path.join(pathname, filename);
+
         await this.ToS3({
             data: data,
             file_path: file_path,

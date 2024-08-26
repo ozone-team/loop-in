@@ -5,6 +5,7 @@ import {IconX} from "@tabler/icons-react";
 import Image from 'next/image';
 import {FileIcon} from "@/components/files/file-icons";
 import {UploadFile} from "@/app/(actions)/upload-file";
+import toast from "react-hot-toast";
 
 interface UploadFileItemProps {
     file: File | null;
@@ -28,6 +29,7 @@ const UploadFileItem = (props: UploadFileItemProps) => {
         },
         onError: (error) => {
             console.error(error)
+            toast.error('Failed to upload file\n' + error.message)
             props.onDelete()
         },
     })

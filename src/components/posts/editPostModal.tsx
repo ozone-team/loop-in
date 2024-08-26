@@ -85,10 +85,10 @@ const EditPostModal = (props: EditPostModalProps) => {
                 category: category,
                 content: content.trim(),
                 media: media.filter(m=>m.url).map(f => ({
-                    name: f.file!.name,
-                    mime: f.file!.type,
-                    url: f.url!,
-                    size: f.file!.size,
+                    name: f.file?.name || f.record?.name,
+                    mime: f.file?.type || f.record?.mime,
+                    url: f.url,
+                    size: f.file?.size || f.record?.size,
                 })) as any[],
                 tags: tags
             })
@@ -224,6 +224,7 @@ const EditPostModal = (props: EditPostModalProps) => {
                                                             file={file.file || null}
                                                             onDelete={() => setMedia(o => o.filter((_, i) => i !== ix))}
                                                             key={ix}
+                                                            record={file.record || undefined}
                                                             onUploaded={(url) => {
                                                                 setMedia(o => o.map((f, i) => i === ix ? {
                                                                     ...f,
