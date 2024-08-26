@@ -1,25 +1,72 @@
-import * as fs from "node:fs";
-import path from "node:path";
+import { PutObjectCommand, S3Client} from "@aws-sdk/client-s3";
+
+const S3 = new S3Client({
+    region: "auto",
+    endpoint: process.env.S3_URL as string,
+    credentials: {
+        accessKeyId: process.env.S3_ACCESS_KEY_ID as string,
+        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY as string,
+    },
+    forcePathStyle: true
+});
 
 
 class Files {
-    save(data: any, file_path: string) {
 
-        let abs_path = path.join(process.cwd(),'public','uploads',file_path);
+    async saveBuffer(buffer: ArrayBuffer, file_path: string, contentType: string) {
+        await this.ToS3({
+            data: buffer,
+            file_path: file_path,
+            contentType: contentType,
+            acl: 'public-read'
+        });
+        return this.GetPublicUrl(file_path);
+    }
 
-        // create the folder path if it doesn't exist
-        let folder = path.dirname(abs_path);
-        if(!fs.existsSync(folder)){
-            fs.mkdirSync(folder, { recursive: true });
+    async save(file: File, file_path: string) {
+        const data = await file.arrayBuffer();
+        await this.ToS3({
+            data: data,
+            file_path: file_path,
+            contentType: file.type,
+            acl: 'public-read'
+        });
+        return this.GetPublicUrl(file_path);
+    }
+
+    GetPublicUrl(path:string){
+
+        if(process.env.S3_URL_OUTPUT){
+            let url = process.env.S3_URL_OUTPUT;
+            url = url.replace('[url]', process.env.S3_PUBLIC_URL as string);
+            url = url.replace('[object]', path);
+            url = url.replace('[bucket]', process.env.S3_BUCKET as string);
+            return url;
         }
 
-        // save raw file to path
-        fs.writeFileSync(abs_path, data);
-        let url = new URL(process.env.APP_URL as string);
-        url.pathname = path.join('uploads',file_path);
-
-        return url.toString();
+        return `${process.env.S3_PUBLIC_URL}/${path}`;
     }
+
+    async ToS3(options: ToS3Options){
+        return await S3.send(new PutObjectCommand({
+            Bucket: process.env.S3_BUCKET as string,
+            Key: `${options.file_path}`,
+            Body: new Uint8Array(options.data),
+            ContentType: options.contentType,
+            ACL: (options.acl || 'public-read') as any,
+            CacheControl: 'no-cache',
+            ContentDisposition: options.contentDisposition,
+        }));
+    }
+}
+
+type ACL = 'private' | 'public-read' | 'public-read-write' | 'authenticated-read' | 'aws-exec-read' | 'bucket-owner-read' | 'bucket-owner-full-control' | 'log-delivery-write';
+interface ToS3Options {
+    data: ArrayBufferLike,
+    file_path: string;
+    contentType: string;
+    acl?: ACL;
+    contentDisposition?: string;
 }
 
 const files = new Files()

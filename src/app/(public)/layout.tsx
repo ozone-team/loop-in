@@ -14,7 +14,7 @@ const PublicLayout = async ({ children }: any) => {
         }
     });
 
-    const {site_name, site_logo} = await GetConfig('site_name', 'site_logo');
+    const config = await GetConfig('site_name', 'site_logo');
 
     const session = await auth();
 
@@ -22,9 +22,9 @@ const PublicLayout = async ({ children }: any) => {
         <ModalsProvider>
             <div className={'mobile:overflow-x-hidden w-full'}>
                 <Navbar
-                    logo={site_logo}
+                    logo={config.site_logo || '/logo.svg'}
                     boards={boards}
-                    siteName={site_name}
+                    siteName={config.site_name}
                     user={session?.user}
                 />
                 <div>

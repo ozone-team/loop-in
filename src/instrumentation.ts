@@ -4,8 +4,8 @@ import {slugify} from "@/lib/slug";
 
 
 export async function register() {
-    await Seed().catch(() => {
-        console.error("Failed to seed database");
+    await Seed().catch((e) => {
+        console.error("Failed to seed database:\n",e);
         process.exit(1);
     });
 }
@@ -40,30 +40,9 @@ async function Seed(){
         });
     }
 
-    await prisma.config.upsert({
-        create: {
-            key: 'site_name',
-            value: process.env.SITE_NAME || 'Site Name'
-        },
-        update: {
-
-        },
-        where: {
-            key: 'site_name',
-        }
-    });
-
-    await prisma.config.upsert({
-        create: {
-            key: 'site_logo',
-            value: process.env.SITE_LOGO || `${process.env.APP_URL}/logo.svg`
-        },
-        update: {
-
-        },
-        where: {
-            key: 'site_logo',
-        }
+    await UpdateConfig({
+        site_name: process.env.SITE_NAME || 'Loop In',
+        site_logo: process.env.SITE_LOGO || `${process.env.APP_URL}/logo.svg`
     });
 
     const boards = [

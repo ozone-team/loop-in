@@ -3,10 +3,12 @@ import {thumbs} from "@dicebear/collection";
 import files from "@/lib/files";
 import path from "node:path";
 
-export function GenerateUserAvatar(seed: string){
+export async function GenerateUserAvatar(seed: string){
     const avatar = createAvatar(thumbs, {
         seed: seed
     }).toString();
 
-    return files.save(avatar, path.join('avatars', `${seed}.svg`));
+    let buffer = Buffer.from(avatar);
+
+    return await files.saveBuffer(buffer, path.join('avatars', `${seed}.svg`), 'image/svg+xml');
 }

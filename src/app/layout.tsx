@@ -17,14 +17,12 @@ interface RootLayoutProps {
 
 export default async function RootLayout({children}: Readonly<RootLayoutProps>) {
 
-    const {site_logo} = await GetConfig('site_logo')
-
-    let filepath = new URL(site_logo).pathname
+    const config = await GetConfig('site_logo')
 
     return (
         <html lang="en">
         <head>
-            <link rel={'icon'} href={filepath} type={'image/x-icon'} sizes={'any'}/>
+            <link rel={'icon'} href={config.site_logo || '/logo.svg'} type={'image/x-icon'} sizes={'any'}/>
         </head>
         <body className={inter.className + ' mobile:overflow-x-hidden'}>
         <Providers>

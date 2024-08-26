@@ -27,11 +27,6 @@ export async function UploadSiteLogo(form: FormData){
 
     let image = form.get('site_logo') as File;
 
-    let buffer = await image.arrayBuffer();
-
-    // convert array buffer to buffer
-    buffer = Buffer.from(buffer);
-
     // upload the image to the server
-    return files.save(buffer, image.name);
+    return await files.save(image, image.name);
 }

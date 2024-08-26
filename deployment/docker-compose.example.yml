@@ -23,6 +23,7 @@ services:
       - "3000:3000"
     volumes:
       - public:/app/public
+      - static:/app/.next/static
     depends_on:
       - database
     environment:
@@ -48,3 +49,4 @@ services:
 volumes:
   data:
   public:
+  static:

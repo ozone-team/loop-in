@@ -14,7 +14,6 @@ An easy to use system to centralise product feedback and update stakeholders on 
 
 Official documentation coming soon :)
 
-## Features
 
 - Light and dark mode
 - Anonymous feedback
@@ -42,6 +41,7 @@ Official documentation coming soon :)
 
 ## Deployment
 
+Deploying Loop In is easy with Docker. The following instructions will guide you through deploying the application using Docker Compose.
 
 ### Docker (Official)
 
@@ -90,6 +90,14 @@ services:
         EMAIL_SERVER_PORT: 587
         EMAIL_SERVER_SECURE: false
         EMAIL_FROM: "My Website <noreply@email.com>"
+        # S3 Configuration for file uploads
+        S3_BUCKET: mybucket
+        S3_REGION: auto
+        S3_ACCESS_KEY: myaccesskey
+        S3_SECRET_KEY: mysecretkey
+        S3_ENDPOINT: myendpoint
+        S3_FORCE_PATH_STYLE: true
+        S3_URL_OUTPUT: prefix-bucket
         # Authentication - Change for Production
         AUTH_SECRET: 66625cd0c24563168e3aa543296ff8bb50db60ebdf6d996278cf2d29d2253211
         # This needs to be the same as APP_URL

@@ -63,7 +63,7 @@ export const config = {
                 }
 
                 if(!dbUser.image){
-                    updateData['image'] = GenerateUserAvatar(user.id);
+                    updateData['image'] = await GenerateUserAvatar(user.id);
                 }
 
                 dbUser = await prisma.user.update({
@@ -78,7 +78,7 @@ export const config = {
             session.user = {
                 id: user.id,
                 name: user.name || user.email.split('@')[0],
-                image: user.image || GenerateUserAvatar(user.id),
+                image: user.image || await GenerateUserAvatar(user.id),
                 email: user.email,
                 is_admin: dbUser?.isAdmin || false
             };

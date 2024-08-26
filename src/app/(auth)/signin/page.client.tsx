@@ -52,6 +52,11 @@ const SignInPageClient = (props:SignInPageClientProps) => {
                     autoComplete={'email'}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={e => {
+                        if(e.key === 'Enter'){
+                            mutate()
+                        }
+                    }}
                 />
                 <Button
                     className={'w-full capitalize'}

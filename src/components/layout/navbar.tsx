@@ -165,6 +165,8 @@ const Navbar = (props: NavbarProps) => {
                                         startContent={(
                                             <IconSpeakerphone size={18} />
                                         )}
+                                        as={Link}
+                                        href={'/announcements/new'}
                                     >
                                         New Announcement
                                     </DropdownItem>
@@ -172,6 +174,7 @@ const Navbar = (props: NavbarProps) => {
                                         startContent={(
                                             <IconArticle size={18} />
                                         )}
+                                        onClick={() => modals.newPost.onOpen()}
                                     >
                                         New Post
                                     </DropdownItem>

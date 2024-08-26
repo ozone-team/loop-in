@@ -64,8 +64,6 @@ ENV HOSTNAME="0.0.0.0"
 
 ENV NEXT_SHARP_PATH=/app/node_modules/sharp
 
-RUN npm i -g ts-node
-
 COPY prisma ./prisma
 
 # server.js is created by next build from the standalone output
