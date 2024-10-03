@@ -9,6 +9,7 @@ interface SendMagicEmailDto {
 }
 
 export async function SendMagicEmail(data: SendMagicEmailDto){
+
     const {site_name, site_logo} = await GetConfig('site_name', 'site_logo');
 
     const html = await render(<MagicLinkEmail link={data.link} site_name={site_name} site_logo={site_logo} />);

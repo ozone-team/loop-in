@@ -20,7 +20,7 @@ const Tiptap = (props:TiptapProps) => {
             }),
         ],
         content: props.content || '',
-        onUpdate({ editor }) {
+        onBlur({ editor }) {
             let html = editor.getHTML()
             let plain = editor.getText()
             props.onChange({html, plain})
@@ -28,7 +28,7 @@ const Tiptap = (props:TiptapProps) => {
         onCreate({ editor }) {
             editor.commands.setContent(props.content)
         },
-        shouldRerenderOnTransaction: false
+        shouldRerenderOnTransaction: true
     });
 
     useEffect(() => {
